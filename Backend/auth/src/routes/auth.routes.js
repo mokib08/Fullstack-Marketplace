@@ -12,9 +12,11 @@ router.post('/register',validators.registerUserValidations, authController.regis
 // POST /auth/login
 router.post('/login',validators.loginUserValidations, authController.loginUser);
 
-// POST /auth/me
+// GET /auth/me
 router.get('/me', authMiddleware.authMiddleware, authController.getCurrentUser)
 
+// GET /auth/logout
+router.get('/logout', authController.logoutUser)
 
 module.exports = router;
 
