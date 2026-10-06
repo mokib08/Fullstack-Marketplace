@@ -112,8 +112,16 @@ async function loginUser(req, res) {
 }
 
 
+async function getCurrentUser(req, res){
+    return res.status(200).json({
+        message: 'Current user fatch successfully',
+        user: req.user
+    })
+}
+
 
 module.exports ={
     registerUser,
-    loginUser
+    loginUser,
+    getCurrentUser
 }
