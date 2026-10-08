@@ -4,18 +4,18 @@ const jwt = require('jsonwebtoken')
 const redis = require('../db/redis')
 
 async function registerUser(req, res) {
-    try{
+    try {
 
-        const {username, email, password, fullName: {firstName, lastName}, role} = req.body;
+        const { username, email, password, fullName: { firstName, lastName }, role } = req.body;
 
-        const isUserExists = await userModel.findOne({$or: [{username}, {email}]});
+        const isUserExists = await userModel.findOne({ $or: [{ username }, { email }] });
 
-        if(isUserExists){
-            return res.status(409).json({message: 'Username or email already exists'})
+        if (isUserExists) {
+            return res.status(409).json({ message: 'Username or email already exists' })
         }
 
         const hash = await bcrypt.hash(password, 10);
-        
+
         const user = await userModel.create({
             username,
             email,
@@ -51,11 +51,11 @@ async function registerUser(req, res) {
                 email: user.email,
                 fullName: user.fullName,
                 role: user.role,
-                address: user.address
+                addresses: user.addresses
             }
         })
 
-    }catch(err){
+    } catch (err) {
         console.error('Error registering user:', err);
         res.status(500).json({ message: 'Internal server error' });
     }
@@ -64,18 +64,18 @@ async function registerUser(req, res) {
 
 async function loginUser(req, res) {
     try {
-        const {username, email, password} = req.body;
+        const { username, email, password } = req.body;
 
-        const user = await userModel.findOne({$or:[{email}, {username}]}).select('+password');
+        const user = await userModel.findOne({ $or: [{ email }, { username }] }).select('+password');
 
-        if(!user){
-            return res.status(401).json({message: 'Invalid credentials'})
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid credentials' })
         }
 
         const isMatch = await bcrypt.compare(password, user.password || '')
 
-        if(!isMatch){
-            return res.status(401).json({message: 'Invalid credentials'})
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid credentials' })
         }
 
         const token = jwt.sign({
@@ -83,7 +83,7 @@ async function loginUser(req, res) {
             username: user.username,
             email: user.email,
             role: user.role
-        }, process.env.JWT_SECRET, {expiresIn: '1d'})
+        }, process.env.JWT_SECRET, { expiresIn: '1d' })
 
 
         res.cookie('token', token, {
@@ -100,19 +100,19 @@ async function loginUser(req, res) {
                 email: user.email,
                 fullName: user.fullName,
                 role: user.role,
-                address: user.address
+                addresses: user.addresses
             }
         })
 
 
     } catch (error) {
         console.error('Error in loginUser', error)
-        return res.status(500).json({message: 'Internal server error'})
+        return res.status(500).json({ message: 'Internal server error' })
     }
 }
 
 
-async function getCurrentUser(req, res){
+async function getCurrentUser(req, res) {
     return res.status(200).json({
         message: 'Current user fatch successfully',
         user: req.user
@@ -120,10 +120,10 @@ async function getCurrentUser(req, res){
 }
 
 
-async function logoutUser(req, res){
+async function logoutUser(req, res) {
     const token = req.cookies.token;
 
-    if(token){
+    if (token) {
         await redis.set(`blacklist:${token}`, 'true', 'Ex', 24 * 60 * 60); // 1day
     }
 
@@ -132,13 +132,104 @@ async function logoutUser(req, res){
         secure: true
     })
 
-    return res.status(200).json({message: 'Logged out successfully'});
+    return res.status(200).json({ message: 'Logged out successfully' });
 }
 
 
-module.exports ={
+async function getUserAddresses(req, res) {
+    const id = req.user.id;
+
+    const user = await userModel.findById(id).select('addresses');
+    
+    if(!user) {
+        return res.status(404).json({ message: 'user not found' })
+    }
+
+    return res.status(200).json({
+        message: 'user addresses fetch successfully',
+        addresses: user.addresses
+    })
+}
+
+
+async function addUserAddresses(req, res) {
+    const id = req.user.id
+    const { street, city, state, pincode, country, isDefault } = req.body;
+
+
+    const user = await userModel.findOneAndUpdate({ _id: id }, {
+        $push: {
+            addresses: {
+                street,
+                city,
+                state,
+                pincode,
+                country,
+                isDefault
+            }
+        }
+    }, { new: true })
+
+
+    if(!user) {
+        return res.state(404).json({
+            message: "User not found"
+        })
+    }
+
+    return res.status(201).json({
+        message: "Address added succesfully",
+        addresses: user.addresses[user.addresses.length - 1]
+    })
+
+}
+
+async function deleteUserAddress(req, res) {
+    try {
+        const id = req.user.id;
+        const { addressId } = req.params;
+
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const addressExists = user.addresses.some(
+            (addr) => addr._id.toString() === addressId
+        );
+
+        if (!addressExists) {
+            return res.status(404).json({ message: 'Address not found' })
+        }
+
+        const updatedUser = await userModel.findByIdAndUpdate(
+            id,
+            {
+                $pull: {
+                    addresses: { _id: addressId }
+                }
+            },
+            { new: true }
+        );
+        
+        return res.status(200).json({
+            message: 'address deleted successfully',
+            addresses: updatedUser.addresses
+        });
+
+
+    } catch (error) {
+        return res.status(500).json({ message: error.message })
+    }
+}
+
+
+module.exports = {
     registerUser,
     loginUser,
     getCurrentUser,
-    logoutUser
+    logoutUser,
+    getUserAddresses,
+    addUserAddresses,
+    deleteUserAddress
 }

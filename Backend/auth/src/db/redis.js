@@ -1,12 +1,18 @@
-
 const { Redis } = require('ioredis');
+// require('dotenv').config();
 
 const redis = new Redis({
     host: process.env.REDIS_HOST,
-    prot: process.env.REDIS_PORT,
-    password: process.env.REDIS_PASSWORD
+    port: process.env.REDIS_PORT,
+    password: process.env.REDIS_PASSWORD,
+    // tls: {},
+    // maxRetriesPerRequest: 3,
+    // connectTimeout: 10000
 })
 
+// redis.on('error', (err) => {
+//   console.error('Redis Connection Error:', err.message);
+// });
 
 redis.on('connect', () => {
     console.log('Connect to Redis')
@@ -66,7 +72,7 @@ if (process.env.NODE_ENV === 'test') {
     const { Redis } = require('ioredis');
     const redis = new Redis({
         host: process.env.REDIS_HOST,
-        prot: process.env.REDIS_PORT,
+        port: process.env.REDIS_PORT,
         password: process.env.REDIS_PASSWORD
     });
 
