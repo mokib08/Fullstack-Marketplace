@@ -17,4 +17,20 @@ router.post(
     productController.createProduct
 );
 
+// GET /api/products
+router.get('/', productController.getProduct)
+
+// PATCH /api/products
+router.patch('/:id', createAuthMiddleware(['seller']), productController.updateProduct)
+
+// DELETE /api/product/:id
+router.delete('/:id', createAuthMiddleware(['seller']), productController.deleteProduct)
+
+// GET /api/product/:id
+router.get('/seller', createAuthMiddleware(['seller']), productController.getProductsSeller)
+
+// GET /api/products/:id
+router.get('/:id', productController.getProductById)
+
+
 module.exports = router;
