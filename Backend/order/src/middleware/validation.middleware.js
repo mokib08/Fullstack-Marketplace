@@ -16,17 +16,17 @@ const createOrderValidation = [
         .isString()
         .withMessage('Street must be a string')
         .notEmpty()
-        .withMessage('street is required'),
+        .withMessage('Street is required'),
     body('shippingAddress.city')
         .isString()
-        .withMessage('city must be a string')
+        .withMessage('City must be a string')
         .notEmpty()
         .withMessage('City is required'),
     body('shippingAddress.state')
         .isString()
         .withMessage('State must be a string')
         .notEmpty()
-        .withMessage('state is required'),
+        .withMessage('State is required'),
     body('shippingAddress.pincode')
         .isString()
         .withMessage('Pincode must be a string')
@@ -34,15 +34,13 @@ const createOrderValidation = [
         .withMessage('Pincode is required')
         .bail()
         .matches(/^\d{4,}$/)
-        .withMessage('Pincode must be at least 4 digit'),
+        .withMessage('Pincode must be at least 4 digits'),
     body('shippingAddress.country')
         .isString()
         .withMessage('Country must be a string')
         .notEmpty()
         .withMessage('Country is required'),
-
     respondWithValidationError
-
 ]
 
 
@@ -51,31 +49,35 @@ const updateOrderAddressValidation = [
         .isString()
         .withMessage('Street must be a string')
         .notEmpty()
-        .withMessage('street can not be empty'),,
+        .withMessage('Street can not be empty'),,
     body('shippingAddress.city')
         .isString()
         .withMessage('City must be a string')
         .notEmpty()
-        .withMessage('City can not be empty'),
+        .withMessage('City cannot be empty'),
     body('shippingAddress.state')
         .isString()
         .withMessage('State must be a string')
         .notEmpty()
-        .withMessage('State can not be empty'),
+        .withMessage('State cannot be empty'),
     body('shippingAddress.pincode')
         .isString()
         .withMessage('Pincode must be a string')
         .notEmpty()
-        .withMessage('Pincode can not be empty')
+        .withMessage('Pincode cannot be empty')
         .bail()
         .matches(/^\d{4,}$/)
-        .withMessage('Pincode must be at least 4 digit'),
+        .withMessage('Pincode must be at least 4 digits'),
     body('shippingAddress.country')
         .isString()
         .withMessage('Country must be a string')
         .notEmpty()
-        .withMessage('Country can not be empty')
+        .withMessage('Country can not be empty'),
+    respondWithValidationError
 ]
 
 
-module.exports = {createOrderValidation, updateOrderAddressValidation}
+module.exports = {
+    createOrderValidation, 
+    updateOrderAddressValidation
+}

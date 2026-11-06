@@ -3,7 +3,7 @@ const app = require('../../src/app');
 const { getAuthCookie} = require('../setup/auth')
 
 
-describe('POST /api/orders - Create order from current cart', () => {
+describe('POST /api/orders — Create order from current cart', () => {
     const sampleAddress = {
         street: '123 Main St',
         city: 'Metropolis',

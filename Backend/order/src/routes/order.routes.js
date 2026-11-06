@@ -7,7 +7,7 @@ const orderController = require('../controllers/order.controller')
 const router = express.Router()
 
 
-router.post("/", createAuthMiddleware(["user"]), validation.createOrderValidation, orderController.createOrder )
+router.post("/", createAuthMiddleware(['user']), validation.createOrderValidation , orderController.createOrder )
 
 router.get('/me', createAuthMiddleware(['user']), orderController.getMyOrders)
 

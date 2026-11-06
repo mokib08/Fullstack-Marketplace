@@ -4,6 +4,7 @@ const orderModel = require('../models/order.model');
 const axios = require('axios')
 
 
+// =============createOrder===============
 async function createOrder(req, res){
     const user = req.user;
     const token = req.cookies?.token || req.headers?.authorization?.split(' ')[1];
@@ -72,13 +73,12 @@ async function createOrder(req, res){
 
 
     }catch(err){
-        console.error("Error fetching cart: ", err)
         res.status(500).json({message: "Internal server error", error: err.message})
     }
     
 }
 
-
+// =============getOrder===============
 async function getMyOrders(req, res){
     const user = req.user;
 
@@ -106,7 +106,7 @@ async function getMyOrders(req, res){
     }
 }
 
-
+// =============getOrderById===============
 async function getOrderById(req, res){
     const user = req.user;
     const orderId = req.params.id;
@@ -131,6 +131,7 @@ async function getOrderById(req, res){
     }
 }
 
+// =============cancelOrderById===============
 async function cancleOrderById(req, res){
     const user = req.user;
     const orderId = req.params.id;
@@ -144,8 +145,12 @@ async function cancleOrderById(req, res){
 
         if(order.user.toString() !== user.id){
             return res.status(403).json({
-                message: "Order cannot be cancelled at this stage"
+                message: "Forbidden: You do not have access to this order"
             })
+        }
+
+        if(order.status !== 'PENDING'){
+            return res.status(409).json({message: 'Order cannot be cancelled at this stage'})
         }
 
         order.status = 'CANCELLED';
@@ -162,24 +167,25 @@ async function cancleOrderById(req, res){
 
 }
 
-async function updateOrderAddress(req, res){
+// =============updateOrderAddress===============
+async function updateOrderAddress(req, res) {
     const user = req.user;
     const orderId = req.params.id;
 
     try {
-        const order = await orderModel.findById(orderId);
-        if(!order){
-            return res.status(404).json({message: 'Order not found'});
+        const order = await orderModel.findById(orderId)
+
+        if (!order) {
+            return res.status(404).json({ message: "Order not found" });
         }
 
-        if(order.user.toString() !== user.id){
-            return res.status(403).json({message: 'Forbidden: You do not have acccess to this order'})
+        if (order.user.toString() !== user.id) {
+            return res.status(403).json({ message: "Forbidden: You do not have access to this order" });
         }
 
-        if(order.status !== 'PENDING'){
-            return res.status(403).json({
-                message: "Order address cannot be updated at this stage"
-            })
+        // only PENDING orders can have address updated
+        if (order.status !== "PENDING") {
+            return res.status(409).json({ message: "Order address cannot be updated at this stage" });
         }
 
         order.shippingAddress = {
@@ -187,15 +193,14 @@ async function updateOrderAddress(req, res){
             city: req.body.shippingAddress.city,
             state: req.body.shippingAddress.state,
             zip: req.body.shippingAddress.pincode,
-            country: req.body.shippingAddress.country
+            country: req.body.shippingAddress.country,
         };
 
         await order.save();
 
-        res.status(200).json({order})
-
+        res.status(200).json({ order });
     } catch (err) {
-        res.status(500).json({message: 'Internal server error', error: err.message})
+        res.status(500).json({ message: "Internal server error", error: err.message });
     }
 }
 
